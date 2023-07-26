@@ -531,10 +531,215 @@ age(['23'])
 22 作用域
 
 
+Python 作用分为 3 种
+
+- L Local  局部作用域
+- E Enclosing 闭包函数外的函数中
+- G Global 全局作用域
+- B Built-in 内建作用域
+
+查找顺序  L  E  G   B 
+
+影响变量 函数作用范围的有 
+- 函数   def lambda
+- 类  class 
+- 关键字  global nonlocal
+- 文件 *py
+- 推导式 [],{},() 仅限 py3 
+
+
+**闭包**
+
+> 在一个外函数中定义了一个内函数，内函数里运用了外函数的临时变量，并且外
+函数的返回值是内函数的引用。这样就构成了一个闭包。其实装饰函数，很多都
+是闭包。
+```python
+def outer():
+    temp = "just temp"
+    def wrapper():
+        return temp + "hello world"
+    return wrapper
+```
+
+**一般情况下，在我们认知当中，如果一个函数结束，函数的内部所有东西都会释放掉，还给内存，
+局部变量都会消失。但是闭包是一种特殊情况，如果外函数在结束的时候发现有自己的临时变量将
+来会在内部函数中用到(读取)，就把这个临时变量绑定给了内部函数，然后自己再结束。**
+
+
+如果不使用 += 、 -= 等一类的操作，不加nonlocal也没有关系。这就展示了闭包的特性。
+
+```python
+def outer():
+    num = 1
+
+    def inner():
+        return num + 1
+    return inner
+
+
+res = outer()()
+print(res)
+# 2
+相当于在内部函数读取了 num 的值 不会报错
+```
+```python
+def outer():
+    num = 1
+
+    def inner():
+        num += 2
+        return num
+    return inner
+
+
+res = outer()()
+print(res)
+# UnboundLocalError: local variable 'num' referenced before assignment
+参与赋值 加 运算 就会报错 
+```
+```python
+
+def outer():
+    num = 1
+
+    def inner():
+        nonlocal num
+        num += 2
+        return num
+    return inner
+
+
+res = outer()()
+print(res)
+# 3
+加上nonlocal  就把他编程局部变量 随便运算 赋值 
+
+```
+
+
+变量集合 
+- globals() 以dict的方式存储所有全局变量
+- locals() 以dict的方式存储所有局部变量
 
 
 
+上下文管理器
 
+```python
+with open('test.txt') as f:
+    f.readlines()
+```
+
+
+上下文管理器 可以用来 处理异常   
+
+```python
+class Resource:
+    def __enter__(self):
+        print("=====connect to resource")
+        return self
+
+    def __exit__(self, exec_type, exec_val, exec_tb):
+        print("=====close resource connection")
+        return True
+
+    def operate(self):
+        return 1 / 0
+
+
+with Resource() as res:
+    res.operate()
+```
+
+当出现异常的时候 可以在 `__exit__` 里面进行捕获 然后自己决定如何处理  如果返回 True  就不抛出  默认返回 False
+
+在 写 `__exit__` 函数时，需要注意的事，它必须要有这三个参数：
+
+exc_type：异常类型
+
+exc_val：异常值
+
+exc_tb：异常的错误栈信息
+
+当主逻辑代码没有报异常时，这三个参数将都为None。
+
+
+
+---
+
+按照 contextlib 的协议来自己实现一个打开文件（with open）的上下文管理器
+
+```python
+
+import contextlib
+
+
+@contextlib.contextmanager
+def open_func(file_name):
+    # __enter__ 方法
+    print('open file', file_name, 'in __enter__')
+    file_handler = open(file_name, 'r')
+
+    # 重点 yield
+    # 处理异常
+    try:
+        yield file_handler
+    except Exception as exc:
+        # deal with exception
+        print("the exception is thrown")
+    finally:
+        # __exit__ 方法
+        print('close file', file_name, 'in __exit__')
+        file_handler.close()
+        return
+
+
+with open_func('test.txt') as file_in:
+    for line in file_in:
+        1 / 0
+        print(line)
+
+```
+
+
+装饰器 
+
+装饰器本质上就是一个函数 它可以让其他的函数不改变任何代码的情况下，完成附加的功能 装饰器的返回值 也是一个函数对象
+
+装饰器主要用于有切面的场景 比如 记录日志  性能测试 事务处理  缓存等
+
+主要是代码复用  使得代码更加的优雅
+
+主要掌握 6 种 装饰器的方法 见 ex16 - ex21
+
+1 普通的装饰器
+
+2 带参数的函数装饰器
+
+3 类的装饰器
+
+4 带参数的类的装饰器
+
+5 使用偏函数和类 实现装饰器
+
+6 能装饰类的装饰器
+
+
+
+- 基于类装饰器的实现，必须实现 `__call__` 和 `__init__` 两个内置函数。
+`__init__` ：接收被装饰函数
+`__call__` ：实现装饰逻辑。
+
+- 带参数和不带参数的类装饰器有很大的不同。
+`__init__` ：不再接收被装饰函数，而是接收传入参数。
+`__call__` ：接收被装饰函数，实现装饰逻辑。
+
+- 除函数之外，类也可以是 callable 对象，只要实现了 `__call__` 函数（上面几个例子已经接触过
+了）。
+还有容易被人忽略的偏函数其实也是 callable 对象。
+
+- Python 对某个对象是否能通过装饰器（ @decorator ）形式使用只有一个要求：decorator
+必须是一个“可被调用（callable）的对象。也就是装饰器必须是个可被调用的对象
 
 
 
