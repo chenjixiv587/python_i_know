@@ -1,4 +1,5 @@
 from collections.abc import Iterable
+# Iterable 可迭代对象
 
 
 class Array:
