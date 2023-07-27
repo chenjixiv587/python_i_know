@@ -9,7 +9,7 @@ class Array:
     # 返回该对象的迭代器类的实例
     # 因为自己就是迭代器 返回自己就可以
     def __iter__(self):
-        return self
+        return iter(self)
 
     def __next__(self):
         if self.index < len(self.my_list):
@@ -20,7 +20,7 @@ class Array:
 
 
 # 迭代器
-my_iterator = iter(Array())
+my_iterator = Array()
 print(isinstance(my_iterator, Iterator))
 print(next(my_iterator))
 print(next(my_iterator))

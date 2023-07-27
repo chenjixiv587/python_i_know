@@ -742,16 +742,369 @@ with open_func('test.txt') as file_in:
 必须是一个“可被调用（callable）的对象。也就是装饰器必须是个可被调用的对象
 
 
-
-
-
-
-
-
-
-
 异常处理
 
+异常的类型可以看官方文档  https://docs.python.org/3/library/exceptions.html#%23
+
+
+通过 `raise` 抛出异常
+
+如何捕获异常
+
+
+1 只是捕捉异常但是不具体显示异常
+
+```python
+try:
+    codeA
+except [exception]:
+    codeB
+```
+
+2 捕捉异常 获取异常信息 把信息展示出来
+
+```python
+try:
+    1 / 0
+except ZeroDivisionError as e:
+    print(f"errors happens, the error information is {str(e)}")
+```
+
+
+3 `try ----except ------else`
+
+```python
+try:
+    codeA
+except [exception] as e:
+    codeB
+else:
+    codeC
+```
+
+如果 CodeA 有异常， 就进入 CodeB, 如果正常执行，就进 codeC
+
+4 `try------except-------finally`
+
+```python
+try:
+    codeA
+except [exception] as e:
+    codeB
+finally:
+    codeC
+```
+
+如果codeA 有异常 就进 CodeB , 不管有没有异常  都得走 finally 走
+
+
+5 `try  except else finally ` 可以一起使用
+
+
+捕获异常的前提条件是  你要知道 哪里会产生异常 然后预防性得进行处理
+
+
+捕获多个异常 
+
+1 一个 try 语句  多个 except 语句 只会找一个对应的异常进行处理 （只能处理一个异常）
+
+```python
+try:
+    res = 1 / 0
+except IOError:
+    print("IOError")
+except FloatingPointError:
+    print("浮点数计算错误")
+except ZeroDivisionError:
+    print("除数不能为0")
+
+# output  除数不能为0
+```
+
+2 一个 except 捕获多个异常
+
+```python
+try:
+    res = 1 / 0
+except IOError:
+    print("IOError")
+except (ZeroDivisionError, FloatingPointError):
+    print("计算错误")
+
+# output 计算错误
+```
+except 后面可以接多个 异常 只要匹配其中一个 就可以进行处理
+
+
+
+自定义异常 需要用到 类的继承
+
+关闭异常的 自动关联上下文
+
+
+当我们处理异常的时候，如果处理的不当，会再产生异常，这样新的异常再出现的时候，以前的异常也会随着一起出现
+
+```python 
+
+# 如何取消异常处理的上下文管理
+
+
+try:
+    print(1 / 0)
+except Exception as e:
+    raise RuntimeError("Something bad happens")
+
+
+"""
+output
+
+Traceback (most recent call last):
+  File "C:\Users\IT\Desktop\python_i_know\ex23.py", line 5, in <module>
+    print(1 / 0)
+ZeroDivisionError: division by zero
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\IT\Desktop\python_i_know\ex23.py", line 7, in <module>
+    raise RuntimeError("Something bad happens")
+RuntimeError: Something bad happens
+"""
+```
+
+如果在异常处理程序或 finally 块中引发异常，默认情况下，异常机制会隐式工作会将先前的异常
+附加为新异常的 `__context__`属性。这就是 Python 默认开启的自动关联异常上下文。 
+
+也就是说 在捕捉异常A的时候 这时候产生了异常B 这时候我们不想显示异常A　或者说是　异常想知道异常B的来源　可以用一下的方式　　
+
+
+使用 from 可以看到你的新异常是由 哪个引起的  
+使用 with_traceback(tb) 更好的追踪异常的来源
+
+> with_traceback(tb) 的官方文档
+>
+> 
+> with_traceback(tb)
+This method sets tb as the new traceback for the exception and returns the exception object. It was more commonly used before the exception chaining features of PEP 3134 became available. The following example shows how we can convert an instance of SomeException into an instance of OtherException while preserving the traceback. Once raised, the current frame is pushed onto the traceback of the OtherException, as would have happened to the traceback of the original SomeException had we allowed it to propagate to the caller.
+
+```python
+try:
+    ...
+except SomeException:
+    tb = sys.exception().__traceback__
+    raise OtherException(...).with_traceback(tb)
+
+```
+
+
+```python
+try:
+    print(1 / 0)
+except Exception as e:
+    raise RuntimeError("something bad happened") from e
+
+"""output
+
+
+Traceback (most recent call last):
+  File "C:\Users\IT\Desktop\python_i_know\ex24.py", line 2, in <module>
+    print(1 / 0)
+ZeroDivisionError: division by zero
+
+The above exception was the direct cause of the following exception:
+(上面的异常是下面的异常的最直接原因)
+
+Traceback (most recent call last):
+  File "C:\Users\IT\Desktop\python_i_know\ex24.py", line 4, in <module>
+    raise RuntimeError("something bad happened") from e
+RuntimeError: something bad happened
+"""
+```
+
+```python 
+try:
+    print(1 / 0)
+except Exception as e:
+    # tb = e.__traceback__
+    raise RuntimeError("something bad happened").with_traceback(
+        e.__traceback__)
+"""
+Traceback (most recent call last):
+  File "C:\Users\IT\Desktop\python_i_know\ex25.py", line 2, in <module>
+    print(1 / 0)
+ZeroDivisionError: division by zero
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\IT\Desktop\python_i_know\ex25.py", line 5, in <module>
+    raise RuntimeError("something bad happened").with_traceback(
+  File "C:\Users\IT\Desktop\python_i_know\ex25.py", line 2, in <module>
+    print(1 / 0)
+RuntimeError: something bad happened
+
+
+"""
+
+```
+
+不想显示异常A (关闭自动关联异常上下文的机制)
+
+
+```python
+try:
+    print(1 / 0)
+except Exception as e:
+    raise RuntimeError("something is wrong.") from None
+
+"""
+Traceback (most recent call last):
+  File "<stdin>", line 4, in <module>
+RuntimeError: something is wrong.
+"""
+
+```
+
+
+注意Exception 类的继承顺序问题
+
+```python
+"""
+except 里面如果是 class 的话 注意继承问题
+"""
+
+
+class A(Exception):
+    pass
+
+
+class B(A):
+    pass
+
+
+class C(B):
+    pass
+
+# A 继承于 Exception    B 继承于 A     C 继承于 B
+
+
+for cls in [A, B, C]:
+    try:
+        raise cls()
+    except C:
+        print("C")
+    except B:
+        print("B")
+    except A:
+        print("A")
+
+
+# output
+# C
+# B
+# A
+
+
+for cls in [A, B, C]:
+    try:
+        raise cls()
+    except A:
+        print("A")
+    except B:
+        print("B")
+    except C:
+        print("C")
+
+# output
+# A
+# A
+# B
+
+```
+
+
+一般处理异常的方式是 将异常打印出来或者写在日志里 然后将他们在 raise 出来 进行处理
+
+```python
+import sys
+
+try:
+    f = open('myfile.txt')
+    s = f.readline()
+    i = int(s.strip())
+except OSError as err:
+    print("OS error", err)
+except ValueError:
+    print("could not convert data to int")
+except Exception as err:
+    print(f"Unexpected {err=}, {type(err)=}")
+    raise
+
+# OS error [Errno 2] No such file or directory: 'myfile.txt'
+
+```
+
+
+**If the finally clause executes a `break, continue or return statement`, exceptions are not re-raised.**
+
+如果在 `finally` 代码块中 有 `break, continue or return`等语句 那么异常就不会被再次抛出
+
+```python
+def divide():
+    try:
+        print(1 / 0)
+    finally:
+        return 1
+
+
+print(divide())
+# output
+# 1
+```
+
+
+---
+
+If the try statement reaches a break, continue or return statement, the finally clause will execute just prior to the break, continue or return statement’s execution.
+
+如果try语句里面有 break continue return 语句，那么 finally 代码块 就会在 break continue return 之前先执行
+```python
+def add():
+    try:
+        return 2
+    finally:
+        print("execute first")
+
+
+# add()
+print(add())
+'''
+output
+execute first
+2
+'''
+```
+---
+
+If a finally clause includes a return statement, the returned value will be the one from the finally clause’s return statement, not the value from the try clause’s return statement.
+
+如果 finally 代码块包含 return 语句，那么返回值 将会是 finally return 语句返回的值 而不是 try 语句里面 return 语句返回的值 
+
+```python
+
+def boolReturn():
+    try:
+        return True
+    finally:
+        return False
+boolReturn()
+# output
+# False
+```
+
+
+
+在现实生活中的应用中，一般  `finally` 代码块 都会用在 释放额外的资源中， 比如文件资源 网络连接 等等，不管是否成功的使用了这些资源。
 
 
 
