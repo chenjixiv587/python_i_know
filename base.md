@@ -1,3 +1,5 @@
+## 数据类型与结构
+
 1 `==` 表示的是两个值是否相等 而 `is` 表示的是 两个变量的地址是否一样，如果 `is` 为真 那么两个值是一样的。
 
 2 通过 `id()` 可以查看变量值的内存地址。
@@ -127,6 +129,9 @@
 - 判断两个集合是否有相同的元素 如果有则返回False 没有则返回True set1.isdisjoint(set2)
 - 判断一个元素是否属于这个集合 in
 - 判断是否是子集  set1.issubset(set2) 
+- 
+## 迭代器
+
 
 17 **迭代器**
 
@@ -235,6 +240,9 @@ print(next(my_iterator))
 
 ```
 
+## 生成器
+
+
 18 **生成器** Generator
 
 生成器的最主要目的是延时计算，防止数据量过大的情况下，造成内存消耗过猛。
@@ -319,6 +327,7 @@ StopIteration
 
 生成器，当自己不手动抛出异常的话，会自己抛出 `StopIteration`异常。
 
+## 流程控制
 
 19 **Flow Control 流程控制**
 
@@ -367,6 +376,8 @@ for 循环后面其实是可以加 else 分支的，那么怎么样会走到else
 
 
 推导式 是可以嵌套的 但最好不要超过2次 不然难以理解
+
+## 函数
 
 
 21 函数
@@ -621,7 +632,7 @@ print(res)
 - globals() 以dict的方式存储所有全局变量
 - locals() 以dict的方式存储所有局部变量
 
-
+## 上下文管理器
 
 上下文管理器
 
@@ -701,6 +712,8 @@ with open_func('test.txt') as file_in:
 
 ```
 
+##  装饰器
+
 
 装饰器 
 
@@ -740,6 +753,9 @@ with open_func('test.txt') as file_in:
 
 - Python 对某个对象是否能通过装饰器（ @decorator ）形式使用只有一个要求：decorator
 必须是一个“可被调用（callable）的对象。也就是装饰器必须是个可被调用的对象
+
+
+## 异常
 
 
 异常处理
@@ -1113,6 +1129,290 @@ boolReturn()
 
 
 
+## 类
 
 
+### 类的方法
+
+1 静态方法 有`staticmethod` 装饰的函数
+
+2 类方法 有 `classmethod` 装饰的函数
+
+3 实例方法  没有任何装饰器装饰的普通函数
+
+
+```python
+class Animal:
+    def __init__(self, name):
+        self.name = name
+
+    def run(self):
+        print(f"{self.name} 已经跑起来了")
+
+    @staticmethod
+    def eat():
+        print("just eating")
+
+    @classmethod
+    def jump(cls, name):
+        print(f"{name}跳起来了")
+
+
+pig = Animal("bob")
+pig.run()
+Animal.jump("Alice")
+pig.jump("pig")
+Animal.eat()
+pig.eat()
+
+# bob 已经跑起来了
+# Alice跳起来了
+# pig跳起来了
+# just eating
+# just eating
+
+```
+实例也可以调用静态方法
+
+实例也可以调用类方法  不过注意要填入参数
+
+
+
+方法与函数的区别
+
+1. 普通函数（未定义在类里）和静态方法（`@staticmethod`），都是函数（ `function` ）。
+   
+2. 实例方法和类方法，都是方法（ `method`）。
+
+
+
+方法本质上还是函数，但是他与对象（实例或者类）进行了某种绑定，就变得不纯洁，就与函数产生了差别。
+
+
+### 私有变量与私有方法
+
+
+下划线：
+
+魔法方法 构造函数需要使用下划线
+
+对于暂时用不到的变量值 可以赋值给`_`进行占位 在 `for` 循环中经常使用
+
+
+下划线的分类：
+
+
+- 单前导下划线 `_var`
+- 单末尾下划线 `var_`
+- 双前导下划线 `__var`
+- 双前导和末尾下划线`__var__`
+- 单下划线`_`
+
+
+单前导下划线`_var`
+
+**以单个下划线开头的变量或者方法 仅供内部使用**实际上在创建实例之后，依然是可以访问到的，但是我们约定这样的格式表示内部的，最好不要在外部进行访问。
+
+
+双前导下划线 `__var`
+
+双下划线前缀会导致Python解释器重写属性名称，以避免子类中的命名冲突。
+这也叫做名称修饰(name mangling) - 解释器更改变量的名称，以便在类被扩展的时候不容易产生冲
+突
+
+使用双下划线开头的属性方法 就是私有属性或者方法。，必须得通过 `实例._类名__属性名（方法名）`来调用
+
+
+### 类的封装（Encapsulation）
+
+```python
+# 封装
+# 保护私有变量 通过接口释放相关的信息
+
+
+class Person:
+    def __init__(self, name, age):
+        self.name = name
+        self.__age = age
+
+    def is_adult(self):
+        return self.__age >= 18
+
+
+alice = Person("alice", 19)
+print(alice.is_adult())
+
+```
+
+
+### 类的继承（Inheritance）
+
+多继承
+
+
+```python
+# 多继承
+class D:
+    pass
+
+
+class C(D):
+    pass
+
+
+class B(C):
+    def show(self):
+        print("i am B")
+
+
+class G:
+    pass
+
+
+class F(G):
+    pass
+
+
+class E(F):
+    def show(self):
+        print("i am E")
+
+
+class A(B, E):
+    pass
+
+
+a = A()
+a.show()
+# i am B
+
+```
+
+继承关系 
+
+![继承关系](https://github.com/chenjixiv587/python_i_know/assets/112852746/7e9fa380-3b71-4dda-bd8f-1efa7cb988e0)
+
+
+### 类的多态（Polymorphism）
+
+ Python 中非常有名鸭子类型：一个对象只要“看起来像鸭子，走起路来像鸭子”，那它就可
+以被看做是鸭子。
+
+### 类的 property 属性
+
+为了实现属性的合法性校验，Python 引入的 property 属性。
+
+```python
+class Student:
+    @property
+    def age(self):
+        return self.__age
+
+    @age.setter
+    def age(self, value):
+        if value >= 0 and value <= 50:
+            self.__age = value
+        else:
+            raise ValueError("age must be in [1, 50]")
+
+
+s = Student()
+s.age = -20
+
+# Traceback (most recent call last):
+#   File "C:\Users\IT\Desktop\python_i_know\ex36.py", line 15, in <module>
+#     s.age = -20
+#     ^^^^^
+#   File "C:\Users\IT\Desktop\python_i_know\ex36.py", line 11, in age
+#     raise ValueError("age must be in [1, 50]")
+# ValueError: age must be in [1, 50]
+
+```
+`@property` 其实就是一个装饰器， 将一个函数改造成一个属性。
+
+在读取属性的时候 就进入 `@property` 所装饰的函数中(函数名就是属性名字)进行执行
+
+在写入属性的时候 就进入`@函数名.setter` 所装饰的函数中 进行执行 一般都是进行数据的校验  
+
+两个装饰器 一定是  `@property` 在前 `@函数名.setter`  在后
+
+
+
+### 类的 Mixin 设计模式
+
+
+Mixin 是增强类 
+
+> 飞行只是飞机做为交通工具的一种（增强）属性，我们可以为这个飞
+行的功能单独定义一个（增强）类，称之为 Mixin 类。这个类，是做为增强功能，添加到子类中
+的。为了让其他开发者，一看就知道这是个 Mixin 类，一般都要求开发者遵循规范，在类名末尾加
+上 Mixin 。
+
+
+```python
+
+class Vehicle:
+    pass
+class PlaneMixin:
+    def fly(self):
+        print("I am flying.")
+class Airplane(Vehicle, PlaneMixin):
+    pass
+
+```
+
+
+使用Mixin类实现多重继承要遵循以下几个规范
+
+责任明确：必须表示某一种功能，而不是某个物品；
+
+功能单一：若有多个功能，那就写多个Mixin类；
+
+绝对独立：不能依赖于子类的实现；子类即便没有继承这个Mixin类，也照样可以工作，就是缺
+少了某个功能。
+ 
+### 类的魔术方法（超全整理）
+
+**有点基础 有实践后再看**
+
+### 神奇的元类编程（metaclass）
+
+> type通常用法就是用来判断对象的类型。但除此之外，他最大的用途是用来动态创建类。当
+Python扫描到class的语法的时候，就会调用type函数进行类的创建。
+
+
+那么如何使用 type() 来动态的创建类呢 
+
+
+type() 需要接收三个参数 
+
+
+    1 类的名称 如果没有指定 也必须要传入空字符串 `""`
+
+    2 父类 注意这个传入的时候要以 tuple 的形式传入  如果没有父类的话 也必须要传入空的tuple （）， 默认继承的是 `object`
+
+    3 绑定的方法或者属性 注意以 `dict`的形式传入
+
+
+```python
+# prepare a base class
+
+class BaseClass:
+    def talk(self):
+        print("i am people")
+
+# 准备一个方法
+
+def say(self):
+    print("hello")
+
+
+# 使用 type()来动态的创建 User 类
+
+
+User = type("User", (BaseClass, ), {"name":"user", "say":say})
+```
+
+
+元类 就是创建类的模板
 
